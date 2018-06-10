@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rflow [
+<!ENTITY lt "&#38;#60;">
+<!ENTITY gt "&#62;">
+<!ENTITY amp "&#38;#38;">
+<!ENTITY apos "&#39;">
+<!ENTITY quot "&#34;">
+]>
+<rflow>
+	<graph version="0.8" width="1676" height="601" locationtype="a" offsetx="-28" offsety="-83">
+		<setting>
+			<entry key="USE_GRID">true</entry>
+			<entry key="FOLDER">s3mTri18</entry>
+			<entry key="GRID_DISTANCE2">10</entry>
+		</setting>
+<properties>
+<v key="packages"/>
+</properties>
+		<node id="0" date="1466073036283" uid="8a033a89d5afc186" x="380" y="220">
+			<command>
+#
+# 	Read state and locality boundaries shape files
+#
+
+st   &lt;- readShapeSpatial(&quot;Boundary_Shapefiles/02_StateBoundaries_Poly_2013.shp&quot;, 
+				   proj4string = CRS(&quot;+proj=longlat +dataum=WGS84&quot;))
+loc1 &lt;- readShapeSpatial(&quot;Boundary_Shapefiles/03_Locality_Boundaries_Poly_2013.shp&quot;, 
+				     proj4string = CRS(&quot;+proj=longlat +dataum=WGS84&quot;))
+</command>
+			<property title="Read map data"/>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="1" date="1466073036282" uid="b24779302a277bb6" x="140" y="150">
+			<command>
+#
+#	Drag and zoom function
+#
+
+plotME &lt;- function(sst, main, xlim, ylim, xaxs, yaxs)
+{
+	#
+	#	Plot states and locality borders and Sampling points (SPs) locations
+	#
+	
+	plot(sst, main = main, xlim = xlim, ylim = ylim, xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+	plot(loc, border = &quot;black&quot;, lwd = 2, add = T)
+	points(SPs, pch = 20, cex = .5, col = &quot;red&quot;)
+	
+	#
+	# Develop and plot Delaunay Triangles
+	#
+	
+	points(selPS[, 2], selPS[, 3], col = &quot;green&quot;, cex = 1, pch = 20)
+	
+	#	Convert selected points into spatial points&apos; object
+	
+	selPS.SP = SpatialPoints(cbind(selPS[, 2], selPS[, 3]), proj4string = CRS(&quot;+proj=longlat +dataum=WGS84&quot;))
+	
+	# 	Develop Delaunay triangles&apos; object
+	
+	p.tri &lt;- gDelaunayTriangulation(selPS.SP)
+	
+	#	Plot Delaunay triangles &quot;supress drowing long sided triangles by specifying maximum side length quantile qTSL&quot;
+	
+	plotTRIANGLES(x = p.tri, border = &quot;blue&quot;, qTSL = 0.975)
+	
+	#	Plot village locations
+	
+	points(vil$x, vil$y, pch = 20, cex = .5, col = &quot;black&quot;)
+}
+
+#######################################################################################################################
+# This currently only works on the Windows
+# and X11(type = &quot;Xlib&quot;) screen devices...
+
+zoomdrag &lt;- function(..., xlim = NULL, ylim = NULL, xaxs = &quot;r&quot;, yaxs = &quot;r&quot;) {
+    plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+    startx &lt;- NULL
+    starty &lt;- NULL
+    prevx &lt;- NULL
+    prevy &lt;- NULL
+    usr &lt;- NULL
+
+    devset &lt;- function()
+        if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
+
+    dragmousedown &lt;- function(buttons, x, y) 
+    {
+        startx &lt;&lt;- x
+        starty &lt;&lt;- y
+        prevx &lt;&lt;- 0
+        prevy &lt;&lt;- 0
+        devset()
+        usr &lt;&lt;- par(&quot;usr&quot;)
+        eventEnv$onMouseMove &lt;- dragmousemove
+        NULL
+    }
+
+    dragmousemove &lt;- function(buttons, x, y) 
+    {
+	        devset()
+	        deltax &lt;- diff(grconvertX(c(startx, x), &quot;ndc&quot;, &quot;user&quot;))
+	        deltay &lt;- diff(grconvertY(c(starty, y), &quot;ndc&quot;, &quot;user&quot;))
+	       	        
+		if (abs(deltax-prevx) + abs(deltay-prevy) &gt; 0) 
+				{
+					#usr &lt;&lt;- par(&quot;usr&quot;)
+				    plotME(sst, main = my.ST, xlim = usr[1:2]- deltax, ylim = usr[3:4]- deltay, xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+				    myLAST &lt;&lt;- par(&quot;usr&quot;)
+				    prevx &lt;&lt;- deltax
+				    prevy &lt;&lt;- deltay
+				    
+				}				
+	        NULL
+    }
+    mouseup &lt;- function(buttons, x, y) 
+    {
+    	eventEnv$onMouseMove &lt;- NULL
+    }	
+
+    keydown &lt;- function(key) {
+    			  if (key == &quot;Up&quot;) 
+			        {
+			        	newX &lt;- c(myLAST[1] + diff(myLAST[1:2])/5, myLAST[2] - diff(myLAST[1:2])/5)
+			        	newY &lt;- c(myLAST[3] + diff(myLAST[3:4])/5, myLAST[4] - diff(myLAST[3:4])/5)
+			        	myLAST &lt;&lt;- c(newX, newY)
+			        	plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+			        }
+    	             if (key == &quot;Down&quot;) 
+			        {
+			        	newX &lt;- c(myLAST[1] - diff(myLAST[1:2])/5, myLAST[2] + diff(myLAST[1:2])/5)
+			        	newY &lt;- c(myLAST[3] - diff(myLAST[3:4])/5, myLAST[4] + diff(myLAST[3:4])/5)
+			        	myLAST &lt;&lt;- c(newX, newY)
+			        	plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+			        }
+
+			    if (key == &quot;z&quot;) 
+			        {
+			        	selPS &lt;&lt;- pop()
+			        	plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+			        }
+
+        if (key == &quot;i&quot;) return(invisible(1))
+        eventEnv$onMouseMove &lt;- NULL
+        NULL
+        
+    }
+    setGraphicsEventHandlers(prompt = &quot;Click and drag to move, hit up and down arrows to zoom, z to undo or i to identify&quot;,
+                     onMouseDown = dragmousedown,
+                     onMouseUp = mouseup,
+                     onKeybd = keydown)
+    eventEnv &lt;- getGraphicsEventEnv()
+
+    	
+}
+</command>
+			<property title="Others"/>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="2" date="1466073036255" uid="64ef1940c4832e93" x="140" y="320">
+			<command>
+#
+#	Drag and zoom function
+#
+#plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+plotME &lt;- function(sst, main, xlim, ylim, xaxs, yaxs)
+		{
+		plot(sst, main = main, xlim = xlim, ylim = ylim, xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+		plot(loc, border = &quot;black&quot;, lwd = 2, add = T)
+		points(SPs, pch = 20, cex = .5, col = &quot;red&quot;)
+		points(selPS[, 2], selPS[, 3], col = &quot;green&quot;, cex = 1, pch = 20)
+		selPS.SP = SpatialPoints(cbind(selPS[, 2], selPS[, 3]), proj4string = CRS(&quot;+proj=longlat +dataum=WGS84&quot;))
+		p.tri &lt;- gDelaunayTriangulation(selPS.SP)
+		plotTRIANGLES(x = p.tri, border = &quot;blue&quot;, qTSL = 0.975)
+		points(vil$x, vil$y, pch = 20, cex = .5, col = &quot;black&quot;)
+		}
+
+#######################################################################################################################
+# This currently only works on the Windows
+# and X11(type = &quot;Xlib&quot;) screen devices...
+
+zoomdrag &lt;- function(..., xlim = NULL, ylim = NULL, xaxs = &quot;r&quot;, yaxs = &quot;r&quot;) {
+	plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+	startx &lt;- NULL
+	starty &lt;- NULL
+	prevx &lt;- NULL
+	prevy &lt;- NULL
+	usr &lt;- NULL
+	
+	devset &lt;- function()
+	if (dev.cur() != eventEnv$which) dev.set(eventEnv$which)
+	
+	dragmousedown &lt;- function(buttons, x, y) 
+	{
+		if (buttons == 2) 
+		{
+			startx &lt;&lt;- x
+			starty &lt;&lt;- y
+			prevx &lt;&lt;- 0
+			prevy &lt;&lt;- 0
+			devset()
+			usr &lt;&lt;- par(&quot;usr&quot;)
+			eventEnv$onMouseMove &lt;&lt;- dragmousemove
+			NULL
+		}
+		
+		if (buttons == 0)
+		{
+			#repeat {
+			p &lt;- identify(vil$x, vil$y, label = vil$village, pos = T, n = 1)
+			toMOD &lt;- data.frame(cbind(vil$id[p[[1]]], vil$x[p[[1]]], vil$y[p[[1]]], vil$village[p[[1]]], 
+				vil$locality[p[[1]]], vil$id[p[[1]]]))
+		names(toMOD) &lt;- c(&quot;id&quot;, &quot;x&quot;, &quot;y&quot;, &quot;village&quot;, &quot;locality&quot;, &quot;d&quot;)
+		toMOD[,1] &lt;- as.numeric(toMOD[,1]); toMOD[,2] &lt;- as.numeric(toMOD[,2]); toMOD[,3] &lt;- as.numeric(toMOD[,3])
+		if(nrow(toMOD) == 0)
+		{ 
+			#
+			#	Stop if no selection is made and stop is chosen from graphic device
+			# 		
+		#	break
+		eventEnv$onMouseDown &lt;- NULL
+		} else 
+		if(toMOD[, 4] %in% selPS[, 4])
+		{
+			selPS &lt;- selPS[!(selPS$village %in% toMOD$village),]
+		} else selPS &lt;- rbind(selPS, toMOD)
+		push(selPS)
+		#plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+
+		
+		#}
+	}
+}
+
+dragmousemove &lt;- function(buttons, x, y) 
+{
+	if (buttons == 2) 
+	{
+		devset()
+		deltax &lt;- diff(grconvertX(c(startx, x), &quot;ndc&quot;, &quot;user&quot;))
+		deltay &lt;- diff(grconvertY(c(starty, y), &quot;ndc&quot;, &quot;user&quot;))
+		
+		if (abs(deltax-prevx) + abs(deltay-prevy) &gt; 0) 
+		{
+			#usr &lt;&lt;- par(&quot;usr&quot;)
+			plotME(sst, main = my.ST, xlim = usr[1:2]- deltax, ylim = usr[3:4]- deltay, xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+			myLAST &lt;&lt;- par(&quot;usr&quot;)
+			prevx &lt;&lt;- deltax
+			prevy &lt;&lt;- deltay
+			
+		}				
+		NULL
+	}
+}
+mouseup &lt;- function(buttons, x, y) 
+{
+	
+	if (buttons == 2)
+	#&amp;&amp; !is.null(eventEnv$onMouseMove)) eventEnv$onMouseMove &lt;- NULL
+	{
+	eventEnv$onMouseMove &lt;- NULL
+	#	if (!is.null(eventEnv$onMouseMove)) eventEnv$onMouseMove = NULL
+	}
+	if (buttons == 0)
+	{
+		plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+	}
+}	
+
+keydown &lt;- function(key) {
+	if (key == &quot;Up&quot;) 
+	{
+		newX &lt;- c(myLAST[1] + diff(myLAST[1:2])/5, myLAST[2] - diff(myLAST[1:2])/5)
+		newY &lt;- c(myLAST[3] + diff(myLAST[3:4])/5, myLAST[4] - diff(myLAST[3:4])/5)
+		myLAST &lt;&lt;- c(newX, newY)
+		plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+	}
+	if (key == &quot;Down&quot;) 
+	{
+		newX &lt;- c(myLAST[1] - diff(myLAST[1:2])/5, myLAST[2] + diff(myLAST[1:2])/5)
+		newY &lt;- c(myLAST[3] - diff(myLAST[3:4])/5, myLAST[4] + diff(myLAST[3:4])/5)
+		myLAST &lt;&lt;- c(newX, newY)
+		plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+	}
+	
+	if (key == &quot;Ctrl-A&quot;) 
+	{
+		selPS &lt;&lt;- pop()
+		plotME(sst, main = my.ST, xlim = myLAST[1:2], ylim = myLAST[3:4], xaxs = &quot;i&quot;, yaxs = &quot;i&quot;)
+	}
+	
+	if (key == &quot;q&quot;) return(invisible(1))
+	#eventEnv$onMouseMove &lt;- NULL
+	NULL
+	
+}
+setGraphicsEventHandlers(prompt = &quot;Right click and drag to move, hit Up and down arrows to zoom and q to quit&quot;,
+	onMouseDown = dragmousedown,
+	onMouseUp = mouseup,
+	onKeybd = keydown)
+eventEnv &lt;- getGraphicsEventEnv()
+
+
+}
+</command>
+			<property title="Others"/>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="3" date="1466073036255" uid="41d607ccf866de95" x="210" y="220">
+			<command>#######################################################################################################
+#
+#  Libraries and Functions
+#
+
+#########################################################################################################
+#
+#  Libraries / packages required
+#
+
+library(foreign)
+library(maptools)
+library(gstat)
+library(sp)
+library(rgeos)
+library(zoom)
+#library(Imap)
+#library(maps)
+#library(tripack)
+#library(lattice)
+# library(osmar)
+#library(shapefiles)
+#library(rgdal)
+options(stringsAsFactors = F)
+
+#
+# 	Function to select nearest community to agiven location (sampling location)
+#
+
+nearestPoint &lt;- function(x, y)
+			{
+			near.point &lt;- NULL
+				for(i in 1:length(x))
+					{
+					near.point1 &lt;- gdist(x$x[i], x$y[i], y[,2], y[,3],     
+									 units = &quot;km&quot;, a = 6378137.0, b = 6356752.3142)
+					near.point2 &lt;-  c(y$id[which(near.point1 == min(near.point1))], 
+								   y$x[which(near.point1 == min(near.point1))], 
+							        y$y[which(near.point1 == min(near.point1))], 
+							        y$village[which(near.point1 == min(near.point1))], 
+							        y$locality[which(near.point1 == min(near.point1))], 
+							        min(near.point1))
+					near.point &lt;- rbind(near.point, near.point2)
+					}
+				near.point &lt;- as.data.frame(near.point)
+				names(near.point) &lt;- c(&quot;id&quot;, &quot;x&quot;, &quot;y&quot;, &quot;village&quot;, &quot;locality&quot;, &quot;d&quot;) 
+				rownames(near.point) &lt;- NULL  
+				near.point[,1] &lt;- as.numeric(near.point[,1])
+				near.point[,2] &lt;- as.numeric(near.point[,2])
+				near.point[,3] &lt;- as.numeric(near.point[,3]) 
+				
+				# Remove duplicates
+				near.point &lt;- near.point[!duplicated(near.point[,-6]),]
+				return(near.point)
+			}
+	
+#
+#	Function to suppress drowing long-sided triangles (still a draft)
+#
+
+plotTRIANGLES &lt;- function(x, border, qTSL)
+{
+dist &lt;- NULL
+for(i in 1:length(x))
+   {
+	d1 &lt;- gdist(x@polygons[[i]]@Polygons[[1]]@coords[,1][1], x@polygons[[i]]@Polygons[[1]]@coords[,2][1],
+		 x@polygons[[i]]@Polygons[[1]]@coords[,1][2], x@polygons[[i]]@Polygons[[1]]@coords[,2][2], 
+										 units = &quot;km&quot;, a = 6378137.0, b = 6356752.3142)
+	
+	d2 &lt;- gdist(x@polygons[[i]]@Polygons[[1]]@coords[,1][2], x@polygons[[i]]@Polygons[[1]]@coords[,2][2],
+		 x@polygons[[i]]@Polygons[[1]]@coords[,1][3], x@polygons[[i]]@Polygons[[1]]@coords[,2][3], 
+										 units = &quot;km&quot;, a = 6378137.0, b = 6356752.3142)
+	
+	d3 &lt;- gdist(x@polygons[[i]]@Polygons[[1]]@coords[,1][3], x@polygons[[i]]@Polygons[[1]]@coords[,2][3],
+		 x@polygons[[i]]@Polygons[[1]]@coords[,1][1], x@polygons[[i]]@Polygons[[1]]@coords[,2][1], 
+										 units = &quot;km&quot;, a = 6378137.0, b = 6356752.3142)
+		dst &lt;- cbind(d1, d2, d3)
+		dist &lt;- rbind(dist, dst)
+}
+
+out &lt;- ifelse(dist[,1] &gt;= quantile(dist, probs = qTSL), 1, ifelse(dist[,2] &gt;= quantile(dist, probs = qTSL), 1, 
+	  ifelse(dist[,3] &gt;= quantile(dist, probs = qTSL), 1, 0)))
+
+for(j in which(out != 1))
+   {
+    polygon(x@polygons[[j]]@Polygons[[1]]@coords, border = border)
+   }
+}
+
+#
+# Function to count Sampled points per locality and compute communities&apos; sampling proportion
+#
+
+count.sps &lt;- function(x, y)
+	{
+		numPL &lt;- NULL
+		for(i in unique(y$locality))
+		    {
+			numPL1 &lt;- length(which(x$village %in% y$village[y$locality == i]))
+			numPL2 &lt;- length(y$village[y$locality == i])
+			numPL1 &lt;- c(i, numPL1, numPL2, round(numPL1/numPL2*100, 1))
+			numPL &lt;- data.frame(rbind(numPL, numPL1), row.names = NULL)
+			names(numPL) &lt;- c(&quot;Locality&quot;, &quot;SPs number&quot;, &quot;Total villages #&quot;, &quot;Sampling proportion&quot;)
+			}
+		return(numPL)	
+	}
+
+
+#
+# Function to count Sampled points per locality and compute communities&apos; sampling proportion
+#
+
+#count.sps &lt;- function(x, y, loc)
+#	{
+#		numPL &lt;- NULL
+#		for(i in 1:length(loc@data$Locality))
+#		    {
+#			numPL1 &lt;- length(which(point.in.polygon(x$x, x$y, 
+#								loc@polygons[[i]]@Polygons[[1]]@coords[,1], 
+#								loc@polygons[[i]]@Polygons[[1]]@coords[,2]) == 1))
+#			numPL2 &lt;- length(which(point.in.polygon(y$x, y$y, 
+#								loc@polygons[[i]]@Polygons[[1]]@coords[,1], 
+#								loc@polygons[[i]]@Polygons[[1]]@coords[,2]) == 1))
+#			numPL1 &lt;- c(as.vector(loc@data$Locality[i]), numPL1, numPL2, round(numPL1/numPL2*100, 1))
+#			numPL &lt;- data.frame(rbind(numPL, numPL1), row.names = NULL)
+#			names(numPL) &lt;- c(&quot;Locality&quot;, &quot;SPs number&quot;, &quot;Total villages #&quot;, &quot;Sampling proportion&quot;)
+#			}
+#		return(numPL)	
+#	}
+
+
+    push &lt;- function(x)
+      {
+      if(length(undoStack) == 32)
+        {
+        ## stack overflow so remove first item
+        undoStack[[1]] &lt;&lt;- NULL
+        warning(&quot;Dropping oldest item on undo stack.&quot;, call. = FALSE)
+        } 
+      undoStack[[length(undoStack) + 1]] &lt;&lt;- x
+      }
+
+    pop &lt;- function()
+      {
+      if(length(undoStack) &gt; 0)
+        {
+        ## get last value from undostack
+        popped &lt;- undoStack[[length(undoStack) - 1]]
+        ## remove it from undo stack
+        undoStack[[length(undoStack)]] &lt;&lt;- NULL
+        }
+      if(length(undoStack) == 1)
+        {
+        ## Special case of nothing on the undo stack
+        warning(&quot;There is nothing on the undo stack. NA returned.&quot;, call. = FALSE)
+        popped &lt;- NA
+        }
+       return(popped)
+      }
+
+
+ undoStack &lt;- list()
+</command>
+			<property title="ConfigR &amp; functions"/>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="4" date="1466073036253" uid="4a488935d6ba908b" x="290" y="220">
+			<command>vil &lt;- read.table(file = &quot;SN.csv&quot;, header = TRUE, sep = &quot;,&quot;, fileEncoding = &quot;windows-1252&quot;, quote = &quot;\&quot;&quot;, stringsAsFactors = FALSE, comment.char = &quot;&quot;, na.strings = &quot;&quot;)
+</command>
+			<property title="Read Sets data">
+				<comment state="opened" x="-30" y="-70">Read Settlements&apos; 
+data file</comment>
+			</property>
+			<option type="com.ef_prime.rflow.node.ui.UINodeModel">
+<ui cls="com.ef_prime.rflow.core.app.r.RReadTable" version="0.2.1">
+<v key="file">"SN.csv"</v>
+<v key="_output">vil</v>
+<v key="_output@auto">false</v>
+<v key="autodetect">false</v>
+<v key="sep">","</v>
+<v key="header">TRUE</v>
+<v key="fileEncoding">"windows-1252"</v>
+<v key="nrows"/>
+<v key="na.strings">""</v>
+<v key="quote">"\""</v>
+<v key="stringsAsFactors">FALSE</v>
+<v key="comment.char">""</v>
+<v key="check.names"/>
+<v key="colClasses_type">columns</v>
+<v key="colClasses"/>
+<v key="colClass">"character"</v>
+<v key="advanced"/>
+</ui>
+			</option>
+		</node>
+		<node id="5" date="1466073036228" uid="60b6eee6938ed036" x="500" y="130">
+			<command>
+#
+#  Subset State and localities shapefiles to one state 
+#
+#	Change the number below to select specific state
+
+st@data$STATE
+my.ST &lt;- st@data$STATE[7]    # (using 7 for Sennar)
+loc &lt;- subset(loc1, loc1@data$State == my.ST)
+sst &lt;- subset(st, st@data$STATE == my.ST)
+
+#
+#	Identify initial sampling locations using a hexagonal grid for the whole state
+#
+#	cellsize = 0.31462 gives approximately d = 20 km
+#
+
+SPs &lt;- spsample(sst, type = &quot;hexagonal&quot;, cellsize = 0.31462)
+HexPols &lt;- HexPoints2SpatialPolygons(SPs)
+
+#
+# Select nearest community to each sampling location
+#
+selPS &lt;- nearestPoint(SPs, vil)		# just ignore the warning
+push(selPS)
+
+#
+# 	Call graphic deveice, plot initial hexagons their centroids 
+#		(use x11() for Windows OS and quartz() for mac OS)
+#
+
+try(graphics.off(), silent = T)
+#x11()
+quartz()
+
+plot(sst, main = my.ST)
+myLAST &lt;- par(&quot;usr&quot;)
+
+zoomdrag(sst)
+
+#	Count number of sampled locations per locality and compute communities&apos; sampled proportion
+SPs.per.loc &lt;- count.sps(selPS, vil)
+
+</command>
+			<property title="State Grid TRI">
+				<comment state="closed" x="-30" y="-80">Initial triangulation 
+using one grid for 
+the whole state</comment>
+			</property>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="6" date="1466073036286" uid="79a283741bd0d9ac" x="70" y="230">
+			<command>########## Close files and clear workspace ##########                          
+
+################################################################################
+#
+# Close all open output streams
+#
+while(sink.number() &gt; 0)
+  {
+  sink()
+  }
+
+################################################################################
+# 
+#  Clear R workspace &amp; garbage collection
+#
+rm(list = ls())
+gc()
+
+####################################################################################
+#
+# 	Prevent converting strings to factors
+#
+
+options(stringsAsFactors = F)
+</command>
+			<property title="Reset"/>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="7" date="1466073036254" uid="de013a0053416dac" x="670" y="270">
+			<command>
+#
+# 	Adjust triangulation by:
+# 				&gt; Divide a densily populated triangle into smaller triangles by adding 3 points 
+#					at the middle of each side of the triangle.
+#				&gt; Repeat this as needed (add three points each time).
+#
+
+repeat {
+		vil1 &lt;- vil[!(vil$village %in% selPS$village),]		
+		p &lt;- identify(vil1$x, vil1$y, label = vil1$village, pos = T, n = 3)
+		toMOD &lt;- data.frame(cbind(vil1$id[p[[1]]], vil1$x[p[[1]]], vil1$y[p[[1]]], vil1$village[p[[1]]], 
+						      vil1$locality[p[[1]]], vil1$id[p[[1]]]))
+		names(toMOD) &lt;- c(&quot;id&quot;, &quot;x&quot;, &quot;y&quot;, &quot;village&quot;, &quot;locality&quot;, &quot;d&quot;)
+		toMOD[,1] &lt;- as.numeric(toMOD[,1]); toMOD[,2] &lt;- as.numeric(toMOD[,2]); toMOD[,3] &lt;- as.numeric(toMOD[,3])
+
+		#
+		#	Stop if no selection is made and stop is chosen from graphic device
+		#
+					
+			if(nrow(toMOD) == 0)
+				{
+					break
+				} else 
+
+					selPS &lt;- rbind(selPS, toMOD)
+					push(selPS)
+	#
+	# Plot
+	#
+
+	zoomdrag(sst)
+	getGraphicsEvent()
+	SPs.per.loc &lt;- count.sps(selPS, vil)
+	SPs.per.loc	
+	# Tidy up
+	rm(p, toMOD)
+}
+
+
+</command>
+			<property title="Add three points">
+				<comment state="closed" x="-20" y="50">Run this node to Divide a triangle into 4 
+smaller triangles by selecting new three 
+points</comment>
+			</property>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="8" date="1466073036281" uid="b99d0920331e18eb" x="660" y="140">
+			<command>
+#
+# Adjust triangulation by:
+# 				&gt; Adding a point by clicking on or near the target community
+#				&gt; Removing a point by clicking on an already selected community
+#				&gt; Repeat this as needed
+
+repeat {
+		p &lt;- identify(vil$x, vil$y, label = vil$village, pos = T, n = 1)
+		toMOD &lt;- data.frame(cbind(vil$id[p[[1]]], vil$x[p[[1]]], vil$y[p[[1]]], vil$village[p[[1]]], 
+						      vil$locality[p[[1]]], vil$id[p[[1]]]))
+		names(toMOD) &lt;- c(&quot;id&quot;, &quot;x&quot;, &quot;y&quot;, &quot;village&quot;, &quot;locality&quot;, &quot;d&quot;)
+		toMOD[,1] &lt;- as.numeric(toMOD[,1]); toMOD[,2] &lt;- as.numeric(toMOD[,2]); toMOD[,3] &lt;- as.numeric(toMOD[,3])
+			if(nrow(toMOD) == 0)
+			{ 
+				#
+				#	Stop if no selection is made and stop is chosen from graphic device
+				# 		
+				break
+			} else 
+				if(toMOD[, 4] %in% selPS[, 4])
+					{
+						selPS &lt;- selPS[!(selPS$village %in% toMOD$village),]
+					} else 
+					selPS &lt;- rbind(selPS, toMOD)
+					push(selPS)
+	#
+	# Plot
+	#
+
+	zoomdrag(sst)
+	getGraphicsEvent()
+
+	SPs.per.loc &lt;- count.sps(selPS, vil)
+	SPs.per.loc	
+	# Tidy up
+	rm(p, toMOD)
+}</command>
+			<property title="Add/Remove points">
+				<comment state="closed" x="-10" y="-70">Run this node to add or remove points 
+(one point at a time)</comment>
+			</property>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<node id="9" date="1466073036280" uid="85bfc6df0556fb77" x="500" y="290">
+			<command>
+#
+#  Subset State and localities shapefiles to one state 
+#
+#	Change the number below to select specific state
+
+st@data$STATE
+my.ST &lt;- st@data$STATE[7]    # (using 7 for Sennar)
+loc &lt;- subset(loc1, loc1@data$State == my.ST)
+sst &lt;- subset(st, st@data$STATE == my.ST)
+
+#
+#	Identify initial sampling locations using a hexagonal grid for each locality
+#	aiming at at leat 12 points per locality
+#
+
+merSPs &lt;- data.frame(matrix(NA, ncol = 2, nrow = 0))
+
+for(i in 1:length(loc@data$Locality))
+    {
+	SPs &lt;- spsample(loc[i,], n = 14, type = &quot;hexagonal&quot;) # 14 is put instead of 12 to ensure having at least 12
+	merSPs1 &lt;- cbind(SPs$x, SPs$y)
+	merSPs &lt;- rbind(merSPs, merSPs1)
+	}
+names(merSPs) &lt;- c(&quot;x&quot;, &quot;y&quot;)
+
+SPs &lt;- SpatialPoints(merSPs, proj4string = CRS(&quot;+proj=longlat +dataum=WGS84&quot;))
+HexPols &lt;- HexPoints2SpatialPolygons(SPs)
+
+#
+#	Select nearest community to each sampling location
+#
+		
+selPS &lt;- nearestPoint(SPs, vil)		# just ignore the warning
+push(selPS)
+
+#
+# 	Call graphic deveice, plot initial hexagons their centroids 
+#		(use x11() for Windows OS and quartz() for mac OS)
+#
+
+try(graphics.off(), silent = T)
+x11()
+#quartz()
+
+plot(sst, main = my.ST)
+myLAST &lt;- par(&quot;usr&quot;)
+
+zoomdrag(sst)
+
+#	Count number of sampled locations per locality and compute communities&apos; sampled proportion
+SPs.per.loc &lt;- count.sps(selPS, vil)
+</command>
+			<property title="Locality Grid TRI">
+				<comment state="closed" x="-50" y="50">Initial triangulation 
+using separate grid for 
+each locality.</comment>
+			</property>
+			<option type="com.ef_prime.rflow.node.base.FreeNodeModel"/>
+		</node>
+		<edge from="3" to="4"/>
+		<edge from="4" to="0"/>
+		<edge from="6" to="2"/>
+		<edge from="0" to="5"/>
+		<edge from="6" to="1"/>
+		<edge from="0" to="9"/>
+		<edge from="1" to="3"/>
+	</graph>
+	<task>
+		<taskgroup>
+			<taskproperty/>
+		</taskgroup>
+	</task>
+</rflow>
