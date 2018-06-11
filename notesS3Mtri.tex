@@ -118,7 +118,7 @@
   \preauthor{}\postauthor{}
   \predate{\centering\large\emph}
   \postdate{\par}
-  \date{10 June 2018}
+  \date{11 June 2018}
 
 
 \begin{document}
@@ -189,7 +189,7 @@ syntax:
 
 \begin{verbatim}
 ## OGR data source with driver: ESRI Shapefile 
-## Source: "/Users/ernest/Dropbox/R/S3M/new/s3mTRI/Boundary_Shapefiles", layer: "02_StateBoundaries_Poly_2013"
+## Source: "/Users/ernest/Documents/GitHub/s3mTRI/Boundary_Shapefiles", layer: "02_StateBoundaries_Poly_2013"
 ## with 18 features
 ## It has 4 fields
 \end{verbatim}
@@ -383,16 +383,16 @@ data frame that is expected.
 \end{Shaded}
 
 \begin{verbatim}
-##    id        x        y         village             locality
-## 1 920 33.28083 12.61028  Galaa' AlBeid' AlDali and AlMazmoum
-## 2  54 34.14706 12.64006  Wad Girif Awal            Abu Hijar
-## 3 244 34.79008 12.82597  Um Bagara Garb            Al Dindir
-## 4 939 33.67212 13.45171 Wad Hashim Mroa               Sennar
-##                    d
-## 1   8.39494441502051
-## 2 0.0534743139366605
-## 3   38.0782315663253
-## 4  0.678767494050234
+##    id        x        y            village             locality
+## 1 924 33.83056 12.11183 Tagali (AlMazmoum) AlDali and AlMazmoum
+## 2 349 34.50039 12.59189             braish              AlSooki
+## 3 142 34.36761 13.02728       Al Takambari            Al Dindir
+## 4 753 33.91744 13.85589             Abooda         Sharg Sennar
+##                  d
+## 1 15.6765360256786
+## 2 56.2048679794688
+## 3  2.3792046498903
+## 4 0.91137211606909
 \end{verbatim}
 
 ~
@@ -477,16 +477,16 @@ warnings and we get the same results.
 \end{Shaded}
 
 \begin{verbatim}
-##    id        x        y         village             locality
-## 1 920 33.28083 12.61028  Galaa' AlBeid' AlDali and AlMazmoum
-## 2  54 34.14706 12.64006  Wad Girif Awal            Abu Hijar
-## 3 244 34.79008 12.82597  Um Bagara Garb            Al Dindir
-## 4 939 33.67212 13.45171 Wad Hashim Mroa               Sennar
+##    id        x        y            village             locality
+## 1 924 33.83056 12.11183 Tagali (AlMazmoum) AlDali and AlMazmoum
+## 2 349 34.50039 12.59189             braish              AlSooki
+## 3 142 34.36761 13.02728       Al Takambari            Al Dindir
+## 4 753 33.91744 13.85589             Abooda         Sharg Sennar
 ##                   d
-## 1  8.39494441502051
-## 2 0.053474313755245
-## 3  38.0782315663253
-## 4 0.678767472454879
+## 1  15.6765360256786
+## 2  56.2048679794688
+## 3   2.3792046498903
+## 4 0.911372115160004
 \end{verbatim}
 
 ~
@@ -584,11 +584,16 @@ outputs distance in coordinate units.
 \end{Shaded}
 
 \begin{verbatim}
-##    id        x        y         village             locality            d
-## 1 920 33.28083 12.61028  Galaa' AlBeid' AlDali and AlMazmoum 0.0770641584
-## 2  54 34.14706 12.64006  Wad Girif Awal            Abu Hijar 0.0004843054
-## 3 244 34.79008 12.82597  Um Bagara Garb            Al Dindir 0.3487567809
-## 4 939 33.67212 13.45171 Wad Hashim Mroa               Sennar 0.0062683062
+##    id        x        y            village             locality
+## 1 924 33.83056 12.11183 Tagali (AlMazmoum) AlDali and AlMazmoum
+## 2 349 34.50039 12.59189             braish              AlSooki
+## 3 142 34.36761 13.02728       Al Takambari            Al Dindir
+## 4 753 33.91744 13.85589             Abooda         Sharg Sennar
+##             d
+## 1 0.142592090
+## 2 0.512275848
+## 3 0.021868035
+## 4 0.008243613
 \end{verbatim}
 
 ~
@@ -719,16 +724,16 @@ point, we get the same results in both structure and values.
 \end{Shaded}
 
 \begin{verbatim}
-##     spid  id        x        y         village             locality
-## 920    1 920 33.28083 12.61028  Galaa' AlBeid' AlDali and AlMazmoum
-## 54     2  54 34.14706 12.64006  Wad Girif Awal            Abu Hijar
-## 244    3 244 34.79008 12.82597  Um Bagara Garb            Al Dindir
-## 939    4 939 33.67212 13.45171 Wad Hashim Mroa               Sennar
-##               d
-## 920  8.39494442
-## 54   0.05347431
-## 244 38.07823157
-## 939  0.67876749
+##     spid  id        x        y            village             locality
+## 924    1 924 33.83056 12.11183 Tagali (AlMazmoum) AlDali and AlMazmoum
+## 349    2 349 34.50039 12.59189             braish              AlSooki
+## 142    3 142 34.36761 13.02728       Al Takambari            Al Dindir
+## 753    4 753 33.91744 13.85589             Abooda         Sharg Sennar
+##              d
+## 924 15.6765360
+## 349 56.2048680
+## 142  2.3792047
+## 753  0.9113721
 \end{verbatim}
 
 \newpage
@@ -759,32 +764,32 @@ neighbour to be specified.
 \end{Shaded}
 
 \begin{verbatim}
-##     id        x        y          village             locality
-## 1  920 33.28083 12.61028   Galaa' AlBeid' AlDali and AlMazmoum
-## 2   54 34.14706 12.64006   Wad Girif Awal            Abu Hijar
-## 3  244 34.79008 12.82597   Um Bagara Garb            Al Dindir
-## 4  939 33.67212 13.45171  Wad Hashim Mroa               Sennar
-## 5  791 33.13497 12.70617        algioytab AlDali and AlMazmoum
-## 6  364 34.14936 12.63297          Gindeel              AlSooki
-## 7  126 34.79900 12.84908 Om Bagara Sharig            Al Dindir
-## 8  938 33.66769 13.44440  Wad Hashim Maly               Sennar
-## 9  917 33.24297 12.53967       Wad A'Kara AlDali and AlMazmoum
-## 10  49 34.13497 12.62322  Shamiyah Khalil            Abu Hijar
-## 11 124 34.77686 12.85164         Om Sagit            Al Dindir
-## 12 937 33.66446 13.44985  Wad Hashim Arab               Sennar
-##               d
-## 1  0.0770641584
-## 2  0.0004843054
-## 3  0.3487567809
-## 4  0.0062683062
-## 5  0.0999771165
-## 6  0.0069649118
-## 7  0.3544045868
-## 8  0.0129061202
-## 9  0.1053677149
-## 10 0.0204462652
-## 11 0.3739350563
-## 12 0.0140465938
+##     id        x        y            village             locality
+## 1  924 33.83056 12.11183 Tagali (AlMazmoum) AlDali and AlMazmoum
+## 2  349 34.50039 12.59189             braish              AlSooki
+## 3  142 34.36761 13.02728       Al Takambari            Al Dindir
+## 4  753 33.91744 13.85589             Abooda         Sharg Sennar
+## 5  925 33.82814 12.10714        Wad Bireiga AlDali and AlMazmoum
+## 6  350 34.47467 12.65828          abo saiad              AlSooki
+## 7   98 34.35036 13.01847              Aroma            Al Dindir
+## 8  690 33.93033 13.84656           Wad Taha         Sharg Sennar
+## 9  923 33.81400 12.11506          AlGreibin AlDali and AlMazmoum
+## 10 352 34.29117 12.41944     umdrman flaata              AlSooki
+## 11  97 34.35311 12.99264           Um Namil            Al Dindir
+## 12 752 33.90417 13.85469        Wad Yaagoub         Sharg Sennar
+##              d
+## 1  0.142592090
+## 2  0.512275848
+## 3  0.021868035
+## 4  0.008243613
+## 5  0.147777332
+## 6  0.578536388
+## 7  0.041207473
+## 8  0.011454742
+## 9  0.151071327
+## 10 0.598343032
+## 11 0.055318531
+## 12 0.016314240
 \end{verbatim}
 
 ~
@@ -799,32 +804,32 @@ neighbour to be specified.
 \end{Shaded}
 
 \begin{verbatim}
-##     spid  id        x        y          village             locality
-## 791    1 791 33.13497 12.70617        algioytab AlDali and AlMazmoum
-## 917    1 917 33.24297 12.53967       Wad A'Kara AlDali and AlMazmoum
-## 920    1 920 33.28083 12.61028   Galaa' AlBeid' AlDali and AlMazmoum
-## 48     2  48 34.12717 12.63519        Mishiraat            Abu Hijar
-## 54     2  54 34.14706 12.64006   Wad Girif Awal            Abu Hijar
-## 364    2 364 34.14936 12.63297          Gindeel              AlSooki
-## 124    3 124 34.77686 12.85164         Om Sagit            Al Dindir
-## 126    3 126 34.79900 12.84908 Om Bagara Sharig            Al Dindir
-## 244    3 244 34.79008 12.82597   Um Bagara Garb            Al Dindir
-## 937    4 937 33.66446 13.44985  Wad Hashim Arab               Sennar
-## 938    4 938 33.66769 13.44440  Wad Hashim Maly               Sennar
-## 939    4 939 33.67212 13.45171  Wad Hashim Mroa               Sennar
-##               d
-## 791 11.63585349
-## 917 10.94923910
-## 920  8.39494442
-## 48   2.23184050
-## 54   0.76920677
-## 364  0.05347431
-## 124 40.85328101
-## 126 38.73978689
-## 244 38.07823157
-## 937  1.52157791
-## 938  1.40712236
-## 939  0.67876749
+##     spid  id        x        y            village             locality
+## 923    1 923 33.81400 12.11506          AlGreibin AlDali and AlMazmoum
+## 924    1 924 33.83056 12.11183 Tagali (AlMazmoum) AlDali and AlMazmoum
+## 925    1 925 33.82814 12.10714        Wad Bireiga AlDali and AlMazmoum
+## 349    2 349 34.50039 12.59189             braish              AlSooki
+## 350    2 350 34.47467 12.65828          abo saiad              AlSooki
+## 352    2 352 34.29117 12.41944     umdrman flaata              AlSooki
+## 97     3  97 34.35311 12.99264           Um Namil            Al Dindir
+## 98     3  98 34.35036 13.01847              Aroma            Al Dindir
+## 142    3 142 34.36761 13.02728       Al Takambari            Al Dindir
+## 690    4 690 33.93033 13.84656           Wad Taha         Sharg Sennar
+## 752    4 752 33.90417 13.85469        Wad Yaagoub         Sharg Sennar
+## 753    4 753 33.91744 13.85589             Abooda         Sharg Sennar
+##              d
+## 923 16.5821540
+## 924 16.2484085
+## 925 15.6765360
+## 349 65.2023687
+## 350 63.5234244
+## 352 56.2048680
+## 97   6.0734712
+## 98   4.4856638
+## 142  2.3792047
+## 690  1.7711136
+## 752  1.2386519
+## 753  0.9113721
 \end{verbatim}
 
 ~
